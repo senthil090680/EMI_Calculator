@@ -1,0 +1,1390 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>EMI Calculator: Loan EMI interest rate calculator|Calculate Loan EMI</title>
+<meta name="keywords" content="loan calculator, emi calculator, calculate monthly EMI, personal loan emi calculator, home loan emi calculator, loan emi calculator">
+<meta name="Description" content="EMI Calculator - 3 Easy Steps to Calculate your EMI(Equated Monthly Installments) of Home Loan, personal Loan by Simply entering loan amount, Tenure and Interest rate in EMI Calculator India.">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+<link href="css/sourcenew.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="scripts/mainmenu.js"></script>
+<script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+<script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+<script Language="JavaScript" Type="text/javascript" src="scripts/common.js"></script>
+<script src='scripts/digitToWordConvert.js' type='text/javascript' language='javascript'></script>
+<script src="scripts/highcharts.js"></script>
+<script src="scripts/amort1.js"></script>
+<style>
+div, h4,p  { margin: 0; padding: 0; border: 0; outline: 0; font: 13px Arial, Helvetica, sans-serif;    color: #00000;}
+#emisum { background: none repeat scroll 0pt 0pt #fcfcfc; clear: both; float: left; width: 240px; margin: 0pt 10px 20px 0pt; border: 5px solid #547295; height: 240px; }
+#emisum div { margin: 0pt 0pt 16px; padding: 10px 10px 0pt; text-align: center; width: 220px; border-top: 1px dotted rgb(147, 79, 79); }
+#emisum h4 { color: #934f4f; font-weight: bold; }
+#emisum p { font-size: 18px; font-weight: bold; margin: 0pt auto; }
+#emisum span { padding-left: 5px; }
+#emiamount { border-top: 0pt none ! important; }
+#emiamount p { font-size: 24px; }
+
+.emi_right_box{ float:left; width:340px; border:5px solid #547295;}
+.emi_sum_amount{ float:left; padding:5px; width:228px; }
+.emi_sum_value{ float:right; padding:5px; font-size:13px; font-weight:bold; width:90px;}
+.default_td
+ {
+ border: 1px solid #DBDAD7;background: #fffff; border-top: 0; font: 11px Arial, Helvetica, sans-serif;}
+</style>
+<link href="css/cont_calc.css" rel="stylesheet" type="text/css" />
+<script language="JavaScript">
+
+function get_round(X) { return Math.round(X*100)/100 }
+function showpay() {
+ if ((document.calc.Loan_Amount.value == null || document.calc.Loan_Amount.value.length == 0) ||
+     (document.calc.months.value == null || document.calc.months.value.length == 0)
+||
+     (document.calc.rate.value == null || document.calc.rate.value.length == 0))
+ { document.calc.pay.value = "Incomplete data";
+document.calc.tot_amount.value = "Incomplete data";
+document.calc.tot_interest.value = "Incomplete data";
+document.calc.yearly_interest.value = "Incomplete data";
+document.calc.interest_pa.value = "Incomplete data";
+document.calc.interest_pm.value = "Incomplete data";
+ }
+ else
+ {
+ var princ = document.calc.Loan_Amount.value;
+ var term  = document.calc.months.value;
+ var intr   = document.calc.rate.value / 1200;
+ var yrs   = document.calc.months.value / 12;
+ var exactintr   = document.calc.rate.value;
+ document.calc.pay.value = get_round(princ * intr / (1 - (Math.pow(1/(1 + intr), term))));
+ document.calc.tot_amount.value = get_round(document.calc.pay.value * term);
+ document.calc.tot_interest.value = get_round(document.calc.tot_amount.value - princ);
+ document.calc.yearly_interest.value = get_round(document.calc.tot_interest.value / yrs);
+ document.calc.interest_pa.value = get_round(document.calc.yearly_interest.value / princ * 100);
+ document.calc.interest_pm.value = get_round((document.calc.yearly_interest.value / princ * 100)/12);
+ commitData(princ,exactintr,term);
+ displayBarChart (princ,exactintr,term);
+ var smpl_rsltdv = document.getElementById('smpl_rslt');
+	smpl_rsltdv.innerHTML = 'Yearly Calculated Values';
+ }
+}
+
+function displayBarChart (loanAmount,intRate,numPay)
+{
+	var monPmt=calcMonthly(loanAmount,numPay,intRate);
+	var finalVal = amortizePmtsCharts(loanAmount,intRate,numPay,monPmt);
+ 	
+	var principalAxis = [];
+	principalAxis = finalVal[0];
+	var intrAxis = finalVal[1];
+	var catxAxis = finalVal[2];
+		var sWidth = screen.width;
+var totWidth;
+var totHeight;
+if(sWidth>680) { totWidth = 400; totHeight = 450; } else { totWidth = 250; totHeight = 300; }
+	
+ chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'barChart',
+                type: 'bar',
+				 width: totWidth,
+				height:totHeight
+            },
+            title: {
+                text: false
+            },
+            xAxis: {
+                categories: catxAxis, labels:{rotation:-25}
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Principal + Interest'
+                }
+            },
+            legend: {
+                backgroundColor: '#FFFFFF',
+                reversed: true
+            },
+            tooltip: {
+                formatter: function() {
+                    return ''+
+                        this.series.name +': '+ number_format(this.y) +'';
+                }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+                series: [{
+                name: 'Principal',
+                data: principalAxis
+            }, {
+               name: 'Interest',
+               data: intrAxis
+            }]
+        });
+}	
+$(function () {
+    var chart;
+	var sWidth = screen.width;
+	var totWidth;
+	var totHeight;
+	if(sWidth>680) { totWidth = 400; totHeight = 450; } else { totWidth = 250; totHeight = 300; }
+    $(document).ready(function() {
+	var catxAxis = new Array('Year 1','Year 2','Year 3','Year 4','Year 5','Year 6','Year 7','Year 8','Year 9','Year 10','Year 11','Year 12','Year 13','Year 14','Year 15','Year 16','Year 17','Year 18','Year 19','Year 20');
+        chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'barChart',
+                type: 'bar',
+			    width: totWidth,
+				height:totHeight
+            },
+            title: {
+                text:false
+            },
+            xAxis: {
+                categories: catxAxis, labels:{rotation:-25}
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Principal + Interest'
+                }
+            },
+            legend: {
+
+                backgroundColor: '#FFFFFF',
+                reversed: true
+            },
+            tooltip: {
+                formatter: function() {
+                    return ''+
+                        this.series.name +': '+ number_format(this.y) +'';
+                }
+            },
+            plotOptions: {
+                series: {
+                    stacking: 'normal'
+                }
+            },
+                series: [{
+                name: 'Principal',
+                data: [31083, 34509, 38311, 42537, 47221, 52426, 58203, 64618, 71740, 79644, 88422, 98165, 108983, 120994, 134327, 149132, 165567, 183812, 204069, 226407]
+            }, {
+               name: 'Interest',
+                data: [208533, 205107, 201305, 197079, 192395, 187190, 181413, 174998, 167876, 159972, 151194, 141451, 130633, 118622, 105289, 90484, 74049, 55804, 35547, 13056]
+            }]
+        });
+    });
+    
+});
+
+</script>
+<style type="text/css"> .btnclr {  background-color: #88a943;    border: medium none;    color: #FFFFFF;    font-family: Verdana,Arial,Helvetica,sans-serif;    font-size: 12px;    font-weight: bold;    height: 30px;    width: 90px; } </style>
+</head>
+<body>
+<div class="main_menu_mobo"><div style="position:absolute; top:0px; left:0px; width:100%; height:30px; background-image:url(/images/top_bg.gif); background-position:center top; z-index:1;">
+
+<div style="width:970px; height:auto; margin:auto;">
+
+<div class="text4" style="width:600px; height:auto; float:left; padding-left:260px; margin-top:10px; clear:right;">
+<a href="/agent.php" class="text4">Agents Login</a> &nbsp;&nbsp;&nbsp;<a href="/About_Us.php" class="text4">About Us</a>&nbsp;&nbsp;&nbsp;<a href="/Contents_Blogs.php" class="text4" >Blogs</a>&nbsp;&nbsp;&nbsp;<a href="/loans-in-india.php" class="text4" >Loans in India</a>&nbsp;&nbsp;&nbsp;<a href="/mediarelease.php" class="text4">Media Coverage</a>&nbsp;&nbsp;&nbsp;<a href="/Contact_Us.php" class="text4">Contact Us</a>&nbsp;&nbsp;&nbsp;<a href="http://www.bimadeals.com" rel="nofollow" target="_blank" class="text4" >Insurance Deals</a>
+</div>
+<div class="text4" style="width:101px; height:auto; float:right; margin-left:; margin-top:5px; clear:right;"><a href="http://www.facebook.com/deal4loans" target="_blank" style="text-decoration:none;"><img src="/images/facebookL.gif" width="20" height="18" border="0" /></a><a href="http://www.twitter.com/deal4loans" target="_blank" style="text-decoration:none;"><img src="/images/twitterL.gif" width="25" height="18" border="0"  /></a><a href="http://www.deal4loans.com/loans/feed/" target="_blank" style="text-decoration:none;"><img src="/images/feedL.gif" width="25" height="18" border="0" /></a><a href="https://plus.google.com/117667049594254872720/" target="_blank" style="text-decoration:none;"><img src="/images/googleL.gif" width="20" height="18" border="0"></a></div>
+</div>
+</div>
+<!--top--></div>
+<div class="main_menu_mobo"><div style="margin:auto; width:970px; height:105px; padding-top:28px;">
+<div style="float:left; clear:right; width:243px; height:94px;"><a href="http://www.deal4loans.com/index.php"><img src="/images/logo.gif" width="243" height="90" border="0" /></a></div>
+<div style="float:left; clear:right; width:714px; height:94px; margin-top:13px; text-align:right;">
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script><g:plusone></g:plusone>
+<div style="float:right; clear:right;  width:240px; height:37px; ">
+  &nbsp;
+ </div>
+<div style="float:right; clear:right; width:720px; height:42px; background-image:url(/images/nav_bg.gif ); background-repeat:no-repeat;  margin-right:-30px; padding-top:12px; margin-top:14px;">
+<ul class="menu" id="menu"  >
+<li style="text-align:center; width:116px; z-index:999;">
+<a href="/personal-loans.php" class="btn" style="margin-left:1px;" >Personal Loan</a>
+ <ul>
+ <li style="text-align:left;" >  <a href="/apply-personal-loan.php" class="btn" >Apply Personal Loan</a> </li>
+<li style="text-align:left;">  <a href="/personal-loan-banks.php" class="btn">Personal Loan Banks</a></li>
+<li style="text-align:left;">  <a href="/personal-loan-interest-rate.php" class="btn">Personal Loan Interest Rate</a></li>
+<li style="text-align:left;">  <a href="/personal-loan-emi-calculator.php" class="btn">Personal Loan EMI Calculator</a></li>
+ <li style="text-align:left;" >  <a href="/business-loans.php" class="btn" >Apply Business Loan</a> </li>
+<li style="text-align:left;">  <a href="/Contents_Personal_Loan_Faqs.php" class="btn">Personal Loan FAQs</a> </li>
+</ul>
+
+</li>
+<!--<li  style="text-align:center; width:95px;"><a href="homeloan.html" class="btn" style="margin-left:-5px;">Home Loan </a>    -->
+<li  style="text-align:center; width:95px;  z-index:999;"><a href="/home-loans.php" class="btn" style="margin-left:-5px;">Home Loan </a>   
+
+<ul>
+<li style="text-align:left;"><a href="/apply-home-loans.php" class="btn">Apply Home Loan</a> </li>
+<li style="text-align:left;"><a href="/home-loan-balance-transfer-calculator.php" class="btn">Apply Home Loan Balance Transfer</a></li>
+<li style="text-align:left;"><a href="/home-loans-interest-rates.php" class="btn">Home Loan Interest Rate</a></li>
+<li style="text-align:left;">    <a href="/home-loan-calculator.php" class="btn">Home Loan Eligibility Calculator</a></li>
+<li style="text-align:left;"><a href="/home-loan-emi-calculator1.php" class="btn">Home Loan EMI Calculator</a></li>
+<li style="text-align:left;"><a href="/home-loan-banks.php" class="btn">Home Loan Banks</a></li>
+<li style="text-align:left;"><a href="/Contents_Home_Loan_Faqs.php" class="btn">Home Loan FAQs</a></li>
+</ul>
+</li>
+<li  style="text-align:center; width:85px; z-index:999;">
+<a href="/car-loans.php" class="btn" style="margin-right:2px;" >Car Loan </a>  
+<ul>
+<li style="text-align:left;"> <a href="/apply-car-loans.php" class="btn">Apply Car Loan</a></li>
+<li style="text-align:left;"> <a href="/car-loan-interest-rate.php" class="btn">Car Loan Interest Rate</a></li>
+<li style="text-align:left;">  <a href="/car-loan-banks.php" class="btn">Car Loan Banks</a></li>
+<li style="text-align:left;">  <a href="/car-loan-emi-calculator.php" class="btn">Car Loan EMI Calculator</a></li>
+<li style="text-align:left;"> <a href="/Contents_Car_Loan_Eligibility.php" class="btn">Car Loan  Eligibility</a> </li>
+<li style="text-align:left;"> <a href="/Contents_Car_Loan_Mustread.php" class="btn">Car Loan Must Read</a></li>
+<li style="text-align:left;"> <a href="/Contents_Car_Loan_Faqs.php" class="btn">Car Loan FAQs</a></li>
+</ul>
+</li>
+<li style="text-align:center; width:105px; z-index:999; ">
+<a href="/credit-cards.php" class="btn" >Credit Cards </a> 
+<ul>
+<li style="text-align:left;">  <a href="/apply-credit-card.php" class="btn">Apply Credit Card</a></li>
+<li style="text-align:left;">  <a href="/request-credit-card.php" class="btn">Available Credit Card Products</a></li>
+<li style="text-align:left;">  <a href="/earn-credit-card1.php" class="btn">Credit & Debit Card Rewards</a></li>
+<li style="text-align:left;">  <a href="/credit-card-n-debit-card-offers.php" class="btn">Credit & Debit Card Offers</a></li>
+<li style="text-align:left;">  <a href="/Contents_Credit_Card_Mustread.php" class="btn">Credit Cards Must Read</a></li>
+<li style="text-align:left;">  <a href="/Contents_Credit_Card_Faqs.php" class="btn">Credit Cards FAQs</a></li>
+</ul>      
+</li>
+<li style="text-align:center; width:164px;">
+<a href="/loan-against-property.php" class="btn" >Loan Against Property</a>    
+<ul>
+<li style="text-align:left;">  <a href="/apply-loan-against-property.php" class="btn">Apply Loan Against Property</a></li>
+<li style="text-align:left;">  <a href="/loan-against-property-interest-rate.php" class="btn">Loan Against Property Interest Rate</a></li>
+<li style="text-align:left;">  <a href="/Contents_Loan_Against_Property_Eligibility.php" rel="nofollow" class="btn">Loan Against Property Eligibility</a></li>
+<li style="text-align:left;">  <a href="/Contents_Loan_Against_Property_Mustread.php" rel="nofollow" class="btn">Loan Against Property Must Read</a></li>
+<li style="text-align:left;">  <a href="/Contents_Loan_Against_Property_Faqs.php" rel="nofollow" class="btn">Loan Against Property FAQs</a>  </li>
+</ul>
+</li>
+   
+<li style="text-align:center; width:117px; z-index:999;">
+<a href="/loans/education-loan/education-loan-student-loan/" class="btn"  style="margin-left:-5px;">Education Loan</a>
+<ul  style="margin-left:-139px;" >
+<li style="text-align:left;"><a href="/apply-education-loans.php" rel="nofollow" class="btn">Apply Education Loan</a></li>
+</ul>
+</li>
+</ul>
+
+<script type="text/javascript">
+	var menu=new menu.dd("menu");
+	menu.init("menu","menuhover");
+</script>
+</div>
+
+</div>
+
+</div>
+</div>
+            <div class="line_ad">
+<div style="margin:auto; width:970px; height:3px;  margin-top:1px;"><img src="/images/point6.gif" width="970" height="3" /></div>
+</div>
+</div>
+
+
+<div class="intrl_txt" style="margin:auto; ">
+<div class="emi_logo_box_mobo"><img src="images/logo.gif" width="212" height="69" /></div>
+<div class="text12" style="margin:auto; width:100%; height:21px; margin-top:11px; color:#0a8bd9;"><u><a href="index.php" class="text12" style="color:#0080d6;" >Home</a></u> </a> <span  class="text12" style="color:#4c4c4c;"> >EMI Calculator</span></div>
+<div class="left_wrap-mob" ><div class="emi_head_text_box_a">
+    <h1 class="text3"  style=" height:33; margin-top:0px; float:left; clear:right; font-size:32px; text-transform:none; color:#88a943; margin-left:15px;">EMI Calculator -</h1></div><div class="emi_head_text_box_b"><span style="font-size:12px; margin-bottom:0px; font-weight:bold;">Change Loan Amount, Interest Rate &amp; Tenure for your calculation </span></div><div style="clear:both;"></div>
+    <div style="width:100%; border-bottom:thin solid #88a943;"></div>
+    
+<div class="emi_left_box_mobo">
+  
+<div class="emi_form_box_mobo">
+ <form method="post" name="calc" id="calc"><table width="90%" border="0" align="center" cellpadding="0" cellspacing="4">
+      
+      <tr>
+        <td width="41%" height="35" align="left" valign="middle" class="text" style="  color:#FFF; font-size:13px; "  ><b>Loan Amount</b></td>
+        <td width="59%"><input name='Loan_Amount' type='text' class="input_box_cal" id='Loan_Amount' onblur="getDigitToWords('Loan_Amount','formatedlA','wordloanAmount');" onkeypress="getDigitToWords('Loan_Amount','formatedlA','wordloanAmount');"  onkeydown="getDigitToWords('Loan_Amount','formatedlA','wordloanAmount');"     onkeyup="intOnly(this);getDigitToWords('Loan_Amount','formatedlA','wordloanAmount');" value='2000000' maxlength='9' />	<br> 	<span id='formatedlA' style='font-size:11px; font-weight:normal; color:#ffffff;font-Family:Verdana;'> 	
+Rs. 20,00,000 <br /></span><span id='wordloanAmount' style='font-size:11px; font-weight:normal; color:#ffffff;font-Family:Verdana;text-transform: capitalize;'>Rs. twenty lakh(s).</span></td>
+      </tr>
+     
+           <tr>
+        <td height="35" align="left" valign="middle" class="text" style="  color:#FFF; font-size:13px; " ><b>Interest Rate (Reducing) </b></td>
+        <td class="text" style="  color:#FFF; font-size:13px; "><input name='rate' type='text' class="input_box_cal" value='10.5' maxlength='5' />
+        % Per Annum </td>
+      </tr>
+	   <tr>
+        <td height="35" align="left" valign="middle" class="text" style="  color:#FFF; font-size:13px; "   ><b> Loan Tenure</b> </td>
+        <td class="text" style="  color:#FFF; font-size:13px; "><input name='months' type='text' class="input_box_cal" value='240' maxlength='10'  /> (in Months)</td>
+      </tr>
+            <tr>
+        <td height="35" colspan="2" align="center" valign="middle" class="text" style="  color:#FFF; font-size:11px; font-weight:normal;" >
+        <input name="button" type="button" class="btnclr" onclick='showpay()' value="Calculate" />
+      &nbsp;&nbsp;<input name="reset" type="reset" class="btnclr" value="Reset" /></td>
+        </tr>
+         <tr>
+        <td height="35" align="left" valign="middle" class="text" style="  color:#FFF; font-size:13px; " >Calculated Monthly EMI</td>
+        <td>
+        <input name="pay" type="text" class="input_box_cal"  value="19967.6" readonly/>
+           </td>
+      </tr>
+         <tr>
+        <td height="35" align="left" valign="middle" class="text" style="  color:#FFF; font-size:13px; " ><b>Total Amount with Interest</b></td>
+        <td> <input name="tot_amount" type="text" class="input_box_cal"  value="4792224" readonly/></td>
+      </tr>
+         <tr>
+        <td height="35" align="left" valign="middle" class="text" style="  color:#FFF; font-size:13px; " ><b>Flat Interest Rate PA</b></td>
+        <td> <input name="interest_pa" type="text" class="input_box_cal"  value="6.98" readonly/></td>
+      </tr>
+         <tr>
+        <td height="35" align="left" valign="middle" class="text" style="  color:#FFF; font-size:13px; " ><b>Flat Interest Rate PM</b></td>
+        <td> <input name="interest_pm" type="text" class="input_box_cal"  value="0.58" readonly/></td>
+      </tr>
+         <tr>
+        <td height="35" align="left" valign="middle" class="text" style="  color:#FFF; font-size:13px; " ><b>Total Interest Amount</b></td>
+        <td> <input name="tot_interest" type="text" class="input_box_cal"  value="2792224" readonly/></td>
+      </tr>
+         <tr>
+        <td height="35" align="left" valign="middle" class="text" style="  color:#FFF; font-size:13px; " ><b>Yearly Interest Amount</b></td>
+        <td><input name='yearly_interest' type='text' class="input_box_cal" style=' font-weight:bold; font-size:11px; color:#373737; ' value="139611.2" readonly /></td>
+      </tr>
+  </table>
+ </form></div>
+ <div align="left">
+<table align="center" width="100%">
+<tr>
+<td align="center" style="font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#4572A7; font-weight:bold;">Principal + Interest<br /><img src="new-images/princnintr.gif" width="169" height="29"></td>
+</tr>
+<tr><td align="center"><div id="barChart"></div></td></tr>
+</table></div><div style="clear:both;"></div>
+</div>
+<div style="clear:both;"></div>
+<div  class="emi_mobo_content_txt_c">
+<div style="width:100%;text-align:justify;"><h3 class="text" style="color:#4c4c4c; size:18px; margin-bottom:2px;">How EMI Calculator works</h3></div>
+Our <b>EMI calculator</b> is easy to use and is quick to perform. Use our EMI calculator as a guide before availing for any kind of loan. EMI calculator let's you judge how affordable a loan can be for you. Always use the calculator to get a quick quote on your EMIs. You can calculate <a href="http://www.deal4loans.com/home-loans.php">home loan</a> and <a href="http://www.deal4loans.com/personal-loans.php">personal loan</a> EMI with this calculator. 
+If the quote satisfies you, then apply accordingly. It is this simple.<br />
+<br />
+•  Enter the loan amount you wish to avail in the EMI calculator.<br />
+•  Then enter the loan tenure (months).<br />
+•  And the rate of interest (reducing).<br />
+•  Press &quot;calculate&quot;.<br />
+•  Our EMI calculator will tell you just how much your EMI amount comes to. <br />
+<br />
+<b>Along with your EMI you also get results like</b> :<br/>
+• total amount with interest.<br />
+•  flat interest rate PA / PM.<br />
+•  total interest amount.<br />
+•  yearly interest amount. <br />
+<br />
+And if you think the EMI is a bit more than you can afford, you could always re-calculate.<br />
+This time enter either less loan amount or longer loan tenure in the calculator.<br />
+You can also continue to re-calculate until our calculator gives you an EMI that you are satisfied with. <br />
+<br />
+Also remember to compare quotes from different banks.<br />
+You can do this by entering the loan amount and the rate of interest with the loan tenure of, say bank &quot;A&quot;. See how much it amounts to.<br />
+Then do the same again of bank &quot;B&quot;. 
+Whichever suits your needs and fits your wants, apply. <br />
+<br />
+In today&rsquo;s scenario banks are coming your way with bouquet of offer for your loan requirements. To have a finest deal from these banks one should ponder to following points before cracking a deal.<br />
+Don&rsquo;t be corrupted by paying high EMIs at low rate of interest<br />
+<br />
+<b>Better compare EMIs with same tenure
+                And then with rate of interest</b><br />
+                <br />
+                <b  >(1) Check your reimbursement power (EMI) :</b> You repay the loan in equated monthly installments, or EMI, consist of principal as well as interest as its constituent. Since you pay an equal amount month after Month, these payments are called equal monthly installments. The EMI depends on the amount of the loan, the interest rate and the term of the loan. It Is an unequal combination of principal repayment and interest cost every month. In the Beginning bank recovers their interest payments and gradually more of the principal repayment by the end of the loan tenure. EMI amount should range maximum to the 40% of your monthly income. One should consider offers from various banks as it may differ from one bank to another bank. Your involvement into the process might end up in a win- win situation for you.<br />
+                <br />
+                <b >(2) Market around (Rate of interest):</b> Today there are many lenders in the market. Every bank is offering loans Whether it&rsquo;s a nationalized bank, private bank or foreign bank each of them is there in the show. Every bank offers different <a href="http://www.deal4loans.com/personal-loan-interest-rate.php" title="personal loan rate">personal loan rates</a> and <a href="http://www.deal4loans.com/home-loans-interest-rates.php" title="home loan rate">home loan rates</a> according to the profile of the  customer. So, before finalizing a deal one should consider deals from various banks and than come to a conclusion. And aware of the fact that some people might mislead you by charging high rate of interest at reducing rate and might inform the same at flat rate of interest. So, its always advisable to check full detail with the banks and do better comparison in respect of EMIs , Tenure and rate of interest and keeping tenure as constant with all the banks will ease your comparison and will result in better analysis, finally leading to a prudent decision.<br />
+                <br />
+                <b >(3) Tenure:</b> It&rsquo;s one of the most important factors that one should keep in mind while taking loan. It refers to the no. of years for which the loan has been taken. Longer the tenure higher will be the interest paid and lower will be amount of EMI to be paid and vice-a-versa. It is one of the parameters which helps in comparing the EMIs from different banks keeping it constant for relationship and easing the judgment.<br />
+                <br />
+                <b >(4) Loan Disbursal Time:</b> Loan disbursal time is the period in which loan is processed and the customer receives the demand draft from the bank. Disbursal time differs from one bank to another bank. Its an important factor because there is always a reason behind taking a loan if the opportunity of that objective is lost than its of no use better ask your bank the Turn Around Time and take the loan considering your urgency or better plan it in advance.<br />
+                <br />
+                <b >(5) Processing Fee, Administrative Charges &amp; Pre-Payment Charges:</b> When you Borrow, Your loan carries other charges as well apart from interest that may include Processing Fee which bank charges to process your file and pays to the processing hubs, charges may vary from 1-2% of the loan amount sanctioned by bank. Besides this there is Pre-Payment Charges also which loan carries for the Pre-Closure of the Loan it&rsquo;s always advisable to take loan which has no penalty for the pre-closure of loan because it might happen in the long-run you have enough money to pay your debt and thereby save interest on the same else you can have the opportunity to get your loan transferred at low rate of interest. <br />
+                <br />
+                <b >(6) Insurance Facility:</b> Some bank offers insurance facility by charging small amount of premium which is added to the EMI paid for the loan amount and the person is insured for the amount he has taken loan and incase something unexpected happens. Assured amount will be given to the bank without burdening the members of the family.<br />
+                <br />
+                <h4>Other Available Calculators are - </h4>
+                <a href="http://www.deal4loans.com/home-loan-calculator.php"><strong>Home Loan Eligibility Calculator</strong></a><br />
+                <a href="home-loan-emi-calculator1.php"><b>Home Loan EMI Calculator</b></a> <br />
+                <a href="balance-transfer-home-loans.php"><strong>Home Loan Balance Transfer</strong></a><br />
+    <a href="loan-amortization-calculator.php"><strong>Loan Amortization Calculator</strong></a> </div>
+</div>
+<div class="responsive_ad" align="center"><br />
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-6880092259094596";
+/* mobile banner */
+google_ad_slot = "8273837240";
+google_ad_width = 320;
+google_ad_height = 50;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div></div>
+<div class="rihgt_wrap-mob"  >
+
+<script  type="text/javascript">
+function validateDiv(div)
+{
+
+	var ni1 = document.getElementById(div);
+	ni1.innerHTML = '';
+}
+
+function validmobile(phone) 
+{
+	
+	atPos = phone.indexOf("0")// there must be one "@" symbol
+	if (atPos == 0) 
+	{
+		alert("Mobile number cannot start with 0.");
+		return false;
+	}
+	if(!checkData(document.loan_form.mobile, 'Mobile number', 10))
+		return false;
+
+return true;
+}
+function chkformR()
+{
+var regMail = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9])+$/
+var dt,mdate;dt=new Date();
+
+var alpha=/^[a-zA-Z\ ]*$/;
+var alphanum=/^[a-zA-Z0-9]*$/;
+var num=/^[0-9]*$/;
+var space=/^[\ ]*$/;
+var iChars ="/@#$%^&*()+=-[]\\\';,.{}|\":<>?!";
+
+ if (document.loan_form.Type_Loan.selectedIndex==0)
+	{
+		document.getElementById('productRVal').innerHTML = "<span  class='hintanchorqa'>Select Product</span>";	
+		document.loan_form.Type_Loan.focus();
+		return false;
+	}
+	if(document.loan_form.fullname.value=="")
+	{
+		document.getElementById('nameRVal').innerHTML = "<span  class='hintanchorqa'>Fill Your Name.</span>";	
+		document.loan_form.fullname.focus();
+		return false;
+	}
+ 
+  if(document.loan_form.mobile.value=="")
+	{
+		document.getElementById('phoneRVal').innerHTML = "<span  class='hintanchorqa'>Fill Mobile Number.</span>";	
+		document.loan_form.mobile.focus();
+		return false;
+	}
+	  if(isNaN(document.loan_form.mobile.value)|| document.loan_form.mobile.value.indexOf(" ")!=-1)
+		{
+			document.getElementById('phoneRVal').innerHTML = "<span  class='hintanchorqa'>Fill Mobile Number.</span>";	
+            alert("Enter numeric value");
+			  document.loan_form.mobile.focus();
+			  return false;  
+		}
+        if (document.loan_form.mobile.value.length < 10 )
+		{
+                alert("Please Enter 10 Digits"); 
+				 document.loan_form.mobile.focus();
+				return false;
+        }
+        if ((document.loan_form.mobile.value.charAt(0)!="9") && (document.loan_form.mobile.value.charAt(0)!="8") && (document.loan_form.mobile.value.charAt(0)!="7"))
+		{
+                alert("The number should start only with 9 or 8 or 7");
+				 document.loan_form.mobile.focus();
+                return false;
+		}
+	if(document.loan_form.email_id.value=="")
+	{
+		document.getElementById('emailRVal').innerHTML = "<span  class='hintanchorqa'>Enter  Email Address!</span>";	
+		document.loan_form.email_id.focus();
+		return false;
+	}
+	
+	var str=document.loan_form.email_id.value
+	var aa=str.indexOf("@")
+	var bb=str.indexOf(".")
+	var cc=str.charAt(aa)
+
+	if(aa==-1)
+	{
+		document.getElementById('emailRVal').innerHTML = "<span  class='hintanchorqa'>Enter Valid Email Address!</span>";	
+		document.loan_form.email_id.focus();
+		return false;
+	}
+	else if(bb==-1)
+	{
+		document.getElementById('emailRVal').innerHTML = "<span  class='hintanchorqa'>Enter Valid Email Address!</span>";	
+		document.loan_form.email_id.focus();
+		return false;
+	}
+	
+	if (document.loan_form.city.selectedIndex==0)
+	{
+		document.getElementById('cityRVal').innerHTML = "<span class='hintanchorqa'>Please Select City!</span>";
+		document.loan_form.city.focus();
+		return false;
+	}
+	if(document.loan_form.net_salary.value=="")
+	{
+		document.getElementById('netSalaryRVal').innerHTML = "<span class='hintanchorqa'>Fill your Net salary (Yearly)!</span>";
+		document.loan_form.net_salary.focus();
+		return false;
+	}
+	if(document.loan_form.net_salary.value<=0)
+	{
+		document.getElementById('netSalaryRVal').innerHTML = "<span class='hintanchorqa'>Fill Your Net Salary (Yearly)!</span>";
+		document.loan_form.net_salary.focus();
+		return false;
+	}
+if(!document.loan_form.accept.checked)
+	{
+		document.getElementById('acceptRVal').innerHTML = "<span class='hintanchorqa'>Accept the Terms and Condition!</span>";	
+		document.loan_form.accept.focus();
+		return false;
+	}
+
+	
+}
+function containsdigit(param)
+{
+mystrLen = param.length;
+for(i=0;i<mystrLen;i++)
+{
+if((param.charAt(i)=="0") || (param.charAt(i)=="1") || (param.charAt(i)=="2") || (param.charAt(i)=="3") || (param.charAt(i)=="4") || (param.charAt(i)=="5") || (param.charAt(i)=="6") || (param.charAt(i)=="7") || (param.charAt(i)=="8") || (param.charAt(i)=="9") || (param.charAt(i)=="/"))
+{
+return true;
+}
+}
+return false;
+}
+</script>
+<div style="float:right; clear:right; background-color:#dde4e9; width:300px;  margin-top:18px;">
+<div class="text3" style="width:300px; margin:auto; height:auto; font-size:11px; color:#88a943; margin-top:0px;">
+<table align="center">
+<tr><td align="left" style="color:#000000;">
+<table cellpadding="0" cellspacing="0" border="0" width="300" ><tr><td  align="right">
+<iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.facebook.com%2Fdeal4loans&amp;send=false&amp;layout=button_count&amp;width=90&amp;show_faces=false&amp;font=verdana&amp;colorscheme=light&amp;action=like&amp;height=21&amp;appId=236732309688469" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:90px; height:21px;" allowTransparency="true"></iframe></td><td width="60">
+<a class="addthis_button_tweet" style="width:60px;"></a><script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=xa-4e0d5fb863d78da4"></script>
+</td><td align="left" width="60" ><script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script><g:plusone></g:plusone></td></tr></table>
+</td></tr>
+<tr><td align="center" style="color:#000000;"><div id="smpl_rslt" style="size:16px; margin-bottom:2px; font-weight:bold;"><span >Sample Results</span></div></td></tr>
+<tr>
+<td align="left"><div id="tblpaymentsDetails" align="center" style="color:#000000;"><table align="center" cellpadding="0" cellspacing="0" width="300">
+  <tr>
+  <td align="left">
+ <table id='pmtTab' style='clear: both;    background: none repeat scroll 0 0 #FCFCFC; margin: 0 0 20px 0;   text-align: center; ' width="300">  <tr >
+      <td  height="20"  style='border: 1px solid #DBDAD7;background: #4572A7;	border-top: 0; width:90px; font: 12px Arial, Helvetica, sans-serif; color:#FFFFFF;' id='numHead'>Year</td>
+      <td  height="20"  style='border: 1px solid #DBDAD7;background: #4572A7;	border-top: 0; width:110px; font: 12px Arial, Helvetica, sans-serif; color:#FFFFFF;' id='oldBal'>Principal</td>
+      <td  align="center" style='border: 1px solid #DBDAD7;background: #4572A7;	border-top: 0; width:110px; font: 12px Arial, Helvetica, sans-serif; color:#FFFFFF;' id='pt'>Interest</td>
+      <td   style='border: 1px solid #DBDAD7; background: #4572A7;	border-top: 0; width:210px; font: 12px Arial, Helvetica, sans-serif; color:#FFFFFF;'id='oil' >Balance Amount</td>
+    </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">1</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 31,083</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 208,533</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 1,968,917</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">2</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 34,509</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 205,107</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 1,934,408</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">3</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 38,311</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 201,305</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 1,896,097</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">4</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 42,537</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 197,079</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,853,560</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">5</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 47,221</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 192,395</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,806,339</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">6</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 52,426</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 187,190</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,753,913</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">7</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 58,203</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 181,413</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,695,710</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">8</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 64,618</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 174,998</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,631,092</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">9</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 71,740</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 167,876</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,559,352</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">10</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 79,644</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 159,972</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,479,708</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">11</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 88,422</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 151,194</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,391,286</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">12</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 98,165</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 141,451</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,293,121</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">13</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 108,983</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 130,633</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,184,138</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">14</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 120,994</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 118,622</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 1,063,144</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">15</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 134,327</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 105,289</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 928,817</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">16</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 149,132</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 90,484</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 779,685</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">17</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 165,567</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 74,049</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 614,118</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">18</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 183,812</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 55,804</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 430,306</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">19</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 204,069</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 35,547</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 226,237</td>
+  </tr>
+  <tr>
+    <td height="18" align="center" width="64"  class="default_td">20</td>
+    <td height="18" align="center" width="64"  class="default_td">Rs. 226,407</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 13,056</td>
+   <td height="18" align="center" width="64"  class="default_td">Rs. 0</td>
+  </tr>
+  </table>
+  </td></tr></table></div></td>
+</tr>
+
+</table>
+<div class="emi_aply_block"><!--dfgdfgf</div>
+<div>-->
+<form name="loan_form" method="post" action="/Right.php" onSubmit="return chkformR();">
+<table width="200" border="0" cellspacing="0" cellpadding="0" align="center">
+<tr>
+	<td height="10" align="center" valign="top"><img src="images/bgtopr.jpg" width="270" height="10" /></td>
+</tr>
+<tr>
+	<td align="left" valign="top" ><table border="0" cellpadding="0" cellspacing="0" >
+<tr>
+	
+	<td  align="left" valign="top" width="270" bgcolor="#21405F">
+		<div class="emi_aply_block"><table width="270" border="0" cellpadding="0" cellspacing="3" align="center">
+		<tr>
+			<td align="left" valign="top" colspan="2" style=" color:#FFF; font-size:18px;  text-align:center; ">
+				<strong>Apply Here</strong>			</td>
+		</tr>
+	<tr>
+	<td width="99"  height="23" align="left" valign="top" class="text" style="  color:#FFF; font-size:11px; ">
+		Product</td>
+	<td width="161"  class="text" style="  color:#FFF; font-size:11px;  ">
+		
+		<select name="Type_Loan" id="Type_Loan"  onchange="validateDiv('productRVal');"  style=" height:20px; font-family:Verdana, Geneva, sans-serif; font-size:11px; color:#4c4c4c; width:150px;" tabindex="1" >
+			<option value="1">Please select</option>
+			<option value="Req_Loan_Personal">Personal Loan</option>
+			<option value="Req_Loan_Home">Home Loan</option>
+			<option value="Req_Loan_Car">Car loan</option>
+			<option value="Req_Loan_Against_Property">Loan against Property</option>
+			<option value="Req_Credit_Card">Credit Card</option>
+			<option value="Req_Loan_Education">Education Loan</option>
+			<option value="Req_Loan_Gold">Gold Loan</option>
+		</select>
+	<div id="productRVal"></div>
+	</td>
+</tr>
+<tr>
+<td width="99" height="23" align="left" valign="top" class="text" style="  color:#FFF; font-size:11px; ">
+<input type="hidden" name="source" value="QuickApply" />
+Full Name</td><td width="161" class="text" style="  color:#FFF; font-size:11px;  " height="23">
+<input name="fullname" id="fullname" type="text" style="width:145px; height:14px;" onKeyDown="validateDiv('nameRVal');" tabindex="2" />
+<div id="nameRVal"></div>   
+</td>
+</tr>
+<tr>
+<td width="99" height="23" class="text" style="  color:#FFF; font-size:11px; ">
+Mobile</td>
+<td width="161" class="text" style="  color:#FFF; font-size:11px;  ">
++91 
+<input name="mobile" id="mobile" maxlength="10" onKeyUp="intOnly(this);" onKeyPress="intOnly(this)"; onChange="intOnly(this);" type="text" style="width:122px; height:14px;" onKeyDown="validateDiv('phoneRVal');" tabindex="3"  />
+<div id="phoneRVal"></div>   
+</td>
+</tr>
+<tr>
+<td width="99" height="23" class="text" style="  color:#FFF; font-size:11px; ">
+Email ID </td>
+<td width="161" class="text" style="  color:#FFF; font-size:11px;  ">
+<input name="email_id" id="email_id" type="text" style="width:145px; height:14px;" onKeyDown="validateDiv('emailRVal');" tabindex="4" />
+<div id="emailRVal"></div>   
+</td>
+</tr>
+<tr>
+<td width="99" height="23" align="left" valign="top" class="text" style="  color:#FFF; font-size:11px; ">
+City</td>
+<td width="161" class="text" style="  color:#FFF; font-size:11px;  ">
+<select name="city" id="city" style=" height:18px; font-family:Verdana, Geneva, sans-serif; font-size:11px; color:#4c4c4c; width:150px;" onChange="validateDiv('cityRVal');" tabindex="5" >
+<option value="Please Select">Please Select</option><option value="Ahmedabad">Ahmedabad</option><option value="Bangalore">Bangalore</option><option value="Chandigarh">Chandigarh</option><option value="Chennai">Chennai</option><option value="Cochin">Cochin</option><option value="Delhi">Delhi</option><option value="Hyderabad">Hyderabad</option><option value="Jaipur">Jaipur</option><option value="Jalandhar">Jalandhar</option><option value="Kolkata">Kolkata</option><option value="Lucknow">Lucknow</option><option value="Mumbai">Mumbai</option><option value="Nagpur">Nagpur</option><option value="Pune">Pune</option><option value="Surat">Surat</option><option value="Ananthpur">Ananthpur</option><option value="Aurangabad">Aurangabad</option><option value="Baroda">Baroda</option><option value="Bhimavaram">Bhimavaram</option><option value="Bhiwadi">Bhiwadi</option><option value="Bhopal">Bhopal</option><option value="Bhubneshwar">Bhubneshwar</option><option value="Calicut">Calicut</option><option value="Coimbatore">Coimbatore</option><option value="Cuttack">Cuttack</option><option value="Dehradun">Dehradun</option><option value="Dindigul">Dindigul</option><option value="Eluru">Eluru</option><option value="Ernakulam">Ernakulam</option><option value="Erode">Erode</option><option value="Faridabad">Faridabad</option><option value="Gaziabad">Gaziabad</option><option value="Guntur">Guntur</option><option value="Gurgaon">Gurgaon</option><option value="Guwahati">Guwahati</option><option value="Hosur">Hosur</option><option value="Indore">Indore</option><option value="Jabalpur">Jabalpur</option><option value="Jamshedpur">Jamshedpur</option><option value="Kakinada">Kakinada</option><option value="Karaikkal">Karaikkal</option><option value="Karimnagar">Karimnagar</option><option value="Karur">Karur</option><option value="Kanpur">Kanpur</option><option value="Khammam">Khammam</option><option value="Kishangarh">Kishangarh</option><option value="Kochi">Kochi</option><option value="Kozhikode">Kozhikode</option><option value="Kumbakonam">Kumbakonam</option><option value="Kurnool">Kurnool</option><option value="Ludhiana">Ludhiana</option><option value="Madurai">Madurai</option><option value="Mangalore">Mangalore</option><option value="Mysore">Mysore</option><option value="Nagerkoil">Nagerkoil</option><option value="Nasik">Nasik</option><option value="Navi Mumbai">Navi Mumbai</option><option value="Nellore">Nellore</option><option value="Nizamabad">Nizamabad</option><option value="Noida">Noida</option><option value="Ongole">Ongole</option><option value="Ooty">Ooty</option><option value="Patna">Patna</option><option value="Pondicherry">Pondicherry</option><option value="Pudukottai">Pudukottai</option><option value="Rajahmundry">Rajahmundry</option><option value="Ramagundam">Ramagundam</option><option value="Raipur">Raipur</option><option value="Rewari">Rewari</option><option value="Sahibabad">Sahibabad</option><option value="Salem">Salem</option><option value="Srikakulam">Srikakulam</option><option value="Thane">Thane</option><option value="Thanjavur">Thanjavur</option><option value="Thrissur">Thrissur</option><option value="Thiruvananthapuram">Thiruvananthapuram</option><option value="Tirunelveli">Tirunelveli</option><option value="Tirupathi">Tirupathi</option><option value="Trivandrum">Trivandrum</option><option value="Trichy">Trichy</option><option value="Tuticorin">Tuticorin</option><option value="Vadodara">Vadodara</option><option value="Vellore">Vellore</option><option value="Vishakapatanam">Vishakapatanam</option><option value="Vizag">Vizag</option><option value="Vizianagaram">Vizianagaram</option><option value="Warangal">Warangal</option><option value="Others">Others</option></select>
+<div id="cityRVal"></div>   
+</td>
+</tr>
+<tr>
+<td width="99" height="23" align="left" valign="top" class="text" style="color:#FFF; font-size:11px;  padding-right:2px;">
+Net Salary (Yearly)</td>
+<td width="161" class="text" style="color:#FFF; font-size:11px;  ">
+<input name="net_salary" id="net_salary" type="text" style="width:145px; height:14px;" onKeyUp="intOnly(this);" onKeyPress="intOnly(this)"; onChange="intOnly(this);" onKeyDown="validateDiv('netSalaryRVal');" tabindex="6"  />
+<div id="netSalaryRVal"></div>   
+</td>
+</tr>
+<tr>
+<td align="left" valign="top" colspan="2" class="text9" style=" color:#FFF; font-size:8px; margin-top:0px; ">
+  <input name="accept" type="checkbox" checked="checked"  tabindex="7"/>  
+     I Agree to&nbsp;privacy policy and&nbsp;Terms &amp; Conditions.
+     <div id="acceptRVal"></div>
+</td>
+</tr>
+<tr>
+<td>&nbsp;</td><td  align="center" valign="top"  style= "margin-left:0px;">
+<input type="submit" style="border: 0px none ; background-image: url(images/get_quot.jpg); width: 94px; height: 27px; margin-bottom: 0px;" value="" tabindex="8"/>
+</td>
+</tr> 
+</table>
+        </td>
+</tr>
+
+</table></td>
+</tr>
+<tr>
+<td height="15" align="center" valign="top"><img src="images/bgbottomr.jpg" width="270" height="10" /></td>
+</tr>
+</table>
+</form></div>
+
+
+</div>
+<div class="emi_aply_block">
+<div  align="center"><a href="https://play.google.com/store/apps/details?id=d4l.emicalc.com" target="_blank" rel="nofollow" style="text-decoration:none;"><img src="images/andro36x36.gif" name="Image3" width="33" height="33" border="0" />&nbsp;<img src="images/emi1.gif" name="Image3" width="95" height="20" border="0" /></a></div>
+<div style="width:270px; margin:auto; height:auto; font-size:12px; color:#88a943; margin-top:3px; background-color:#f4f4f4;">
+<div style="clear:both; height:5px;"></div>
+<div class="text3" style="width:230px; margin:auto; height:auto; font-size:12px; color:#88a943; margin-top:2px;"><strong>Personal Loan Rate of Interest</strong></div>
+<div class="text11" style="width:210px; margin:auto; height:auto;  color:#4c4c4c; margin-top:1px; text-align:left;">( Last edited on :  29 Apr 2013</div>
+<div style="clear:both; height:5px;"></div>
+<table border="0" cellpadding="0" cellspacing="1" bgcolor="#e0eaf1" align="center" width="100%">
+                <tr>
+                  <td width="56" align="center" valign="middle" bgcolor="#88a943" class="tblwt_txt" style="font-size:10px;">Bank<br>
+                      <img src="images/spacer.gif" width="48" height="8" border="0"></td>
+                  <td width="64" align="center" valign="middle" bgcolor="#88a943" class="tblwt_txt" style="font-size:10px;">Rate <br />
+                  of Interest</td>
+                  <td width="48" align="center" valign="middle" bgcolor="#88a943" class="tblwt_txt" style="font-size:10px;">Processing<br />
+                    Fee</td>
+                  <td width="50" align="center" valign="middle" bgcolor="#88a943" class="tblwt_txt" style="font-size:10px;">Apply Here </td>
+                </tr>
+				  <tr>
+                  <td height="25" align="left" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+                  				
+
+                  <a href="http://www.deal4loans.com/kotak-personal-loan-eligibility.php" style="color:#335599;">Kotak</a>
+                  
+                 
+                  </td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">15%-19%<br /></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">1% - 2%</td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				 
+	
+			 <a href="http://www.deal4loans.com/kotak-personal-loan-eligibility.php" target="_blank" style="color:#335599;">APPLY</a>
+				</td>
+      </tr>
+
+
+  <tr>
+                  <td height="25" align="left" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+                  				
+
+                  <a href="http://www.deal4loans.com/hdfc-personal-loan-eligibility.php" style="color:#335599;">HDFC Bank</a>
+                  
+                 
+                  </td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">13.99%-22.25%<br /></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">2% - 2.5%</td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				 
+	
+			 <a href="http://www.deal4loans.com/hdfc-personal-loan-eligibility.php" target="_blank" style="color:#335599;">APPLY</a>
+				</td>
+      </tr>
+
+
+  <tr>
+                  <td height="25" align="left" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+                  				
+
+                  <a href="http://www.deal4loans.com/fullerton-personal-loan-eligibility.php" style="color:#335599;">Fullerton India</a>
+                  
+                 
+                  </td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">21%-32%<br /></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">2%</td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				 
+	
+			 <a href="http://www.deal4loans.com/fullerton-personal-loan-eligibility.php" target="_blank" style="color:#335599;">APPLY</a>
+				</td>
+      </tr>
+
+
+  <tr>
+                  <td height="25" align="left" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+                  				
+
+                  <a href="http://www.deal4loans.com/personal-loan-sbi.php" style="color:#335599;">SBI Saral</a>
+                  
+                 
+                  </td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">18.25%-<br /></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">N.A</td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				 
+	
+			 <a href="http://www.deal4loans.com/personal-loan-sbi.php" target="_blank" style="color:#335599;">APPLY</a>
+				</td>
+      </tr>
+
+
+  <tr>
+                  <td height="25" align="left" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+                  				
+
+                  <a href="http://www.deal4loans.com/get-quote-ingvysya.php" style="color:#335599;">ING Vysya Bank</a>
+                  
+                 
+                  </td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">14.5%-19%<br /></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;"></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				 
+	
+			 <a href="http://www.deal4loans.com/get-quote-ingvysya.php" target="_blank" style="color:#335599;">APPLY</a>
+				</td>
+      </tr>
+
+
+  <tr>
+                  <td height="25" align="left" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+                  				
+
+                  <a href="http://www.deal4loans.com/loans/personal-loan/bajaj-finserv-lending-personal-loan-eligibility-documents-interest-rates-apply/" style="color:#335599;">Bajaj Finserv</a>
+                  
+                 
+                  </td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">15%-17%<br /></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;"></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				 
+	
+			 <a href="http://www.deal4loans.com/loans/personal-loan/bajaj-finserv-lending-personal-loan-eligibility-documents-interest-rates-apply/" target="_blank" style="color:#335599;">APPLY</a>
+				</td>
+      </tr>
+
+
+  <tr>
+                  <td height="25" align="left" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+                  				
+
+                  <a href="http://www.deal4loans.com/personal-loan-hdb-financial-services.php" style="color:#335599;">HDB Financial Services</a>
+                  
+                 
+                  </td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">16%-21%<br /></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">1%-2%</td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				 
+	
+			 <a href="http://www.deal4loans.com/personal-loan-hdb-financial-services.php" target="_blank" style="color:#335599;">APPLY</a>
+				</td>
+      </tr>
+
+
+  <tr>
+                  <td height="25" align="left" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+                  				
+
+                  <a href="http://www.deal4loans.com/personal-loan-icici-bank.php" style="color:#335599;">ICICI Bank</a>
+                  
+                 
+                  </td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">14%-18.5%<br /></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;"></td>
+                  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				 
+	
+			 <a href="http://www.deal4loans.com/personal-loan-icici-bank.php" target="_blank" style="color:#335599;">APPLY</a>
+				</td>
+      </tr>
+
+
+    </table>
+
+<div style="clear:both; height:3px;"></div>
+
+<div style="clear:both; height:5px;"></div>
+<div style="width:270px; margin:auto; height:auto; font-size:12px; color:#88a943; margin-top:2px; background-color:#f4f4f4;">
+<div style="clear:both; height:5px;"></div>
+<div class="text3" style="width:230px; margin:auto; height:auto; font-size:14px; color:#88a943; margin-top:2px;"><strong>Home Loan Rate of Interest</strong></div>
+<div class="text11" style="width:210px; margin:auto; height:auto;  color:#4c4c4c; margin-top:px; text-align:left;">( Last edited on : 29 Apr 2013 )</div>
+<div style="clear:both; height:3px;"></div>
+<table border="0" cellpadding="0" cellspacing="1" bgcolor="#e0eaf1">
+                <tr>
+                  <td width="56" align="center" valign="middle" bgcolor="#88a943" class="tblwt_txt" style="font-size:10px;">Bank<br>
+<img src="images/spacer.gif" width="48" height="1" border="0"></td>
+                  <td width="70" align="center" valign="middle" bgcolor="#88a943" class="tblwt_txt" style="font-size:10px;">Rate <br />
+                    of Interest</td>
+                  <td width="47" align="center" valign="middle" bgcolor="#88a943" class="tblwt_txt" style="font-size:10px;">Prepayment<br>
+                    charges</td>
+                  <td width="56" align="center" valign="middle" bgcolor="#88a943" class="tblwt_txt" style="font-size:10px;">Apply Here </td>
+                </tr>
+					 <tr>
+			  <td height="25" align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+              	
+              <a href="http://www.deal4loans.com/lic-housing-home-loan.php" style="color:#335599;">LIC Housing</a>
+            
+              </td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">10.25% - 11.20%</td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">2%</td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				
+			
+		<a href="http://www.deal4loans.com/lic-housing-home-loan.php" target="_blank" style="color:#335599;">APPLY</a>
+
+		  </td></tr>
+                
+		 <tr>
+			  <td height="25" align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+              	
+              <a href="http://www.deal4loans.com/hdfc-ltd-home-loan.php" style="color:#335599;">HDFC Ltd</a>
+            
+              </td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">10.15% - 10.40%</td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">2%</td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				
+			
+		<a href="http://www.deal4loans.com/hdfc-ltd-home-loan.php" target="_blank" style="color:#335599;">APPLY</a>
+
+		  </td></tr>
+                
+		 <tr>
+			  <td height="25" align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+              	
+              <a href="http://www.deal4loans.com/icici-hfc-home-loan.php" style="color:#335599;">ICICI Bank</a>
+            
+              </td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">10.25% - 10.50%</td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">2%</td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				
+			
+		<a href="http://www.deal4loans.com/icici-hfc-home-loan.php" target="_blank" style="color:#335599;">APPLY</a>
+
+		  </td></tr>
+                
+		 <tr>
+			  <td height="25" align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+              	
+              <a href="http://www.deal4loans.com/sbi-home-loan.php" style="color:#335599;">State Bank Of India</a>
+            
+              </td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">9.95%  - 10.10%</td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">2%</td>
+			  <td align="center" valign="middle" bgcolor="#FFFFFF" class="tbl_txt" style="font-size:10px;">
+				
+			
+		<a href="http://www.deal4loans.com/sbi-home-loan.php" target="_blank" style="color:#335599;">APPLY</a>
+
+		  </td></tr>
+                
+	      </table></div>
+
+</div>
+<div style="clear:both; height:5px; background-color:#dde4e9;"></div>
+<div align="center"> 
+<script type="text/javascript"><!--
+google_ad_client = "pub-6880092259094596";
+/* 250x250, created 10/26/09 */
+google_ad_slot = "1962172606";
+google_ad_width = 250;
+google_ad_height = 250;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+</div>
+<br />
+</div>
+</div>
+</div>
+<div style="clear:both;"></div>
+<div class="footer_emi_cal"><div align="center" style=" clear:both; padding:10px; ">
+<table width="970" ><tr><td align="center">
+<script type="text/javascript"><!--
+google_ad_client = "pub-6880092259094596";
+/* deal4loan */
+google_ad_slot = "8793338166";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</td></tr>
+<tr><td align="left">
+<div style="float:left;"><style>
+.comment_form{ width:650; float:left; background:#b6d7fe; border: #89BFE7 solid thin; padding:10px; }
+.comment_text_a{font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#333333;}
+.comment_text_b{font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#333333; font-weight:bold; }
+.comment_text_c{font-family:Arial, Helvetica, sans-serif; font-size:14px; color:#333333; font-weight:bold;}
+.comment_text_d{font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#333333; }
+.comment ul,li{ list-style:none; width:800px;}
+.reply_text{font-family:Arial, Helvetica, sans-serif; font-size:12px; color: #32A0D6; font-weight:bold; }
+</style>
+<script language="javascript">
+function validmail(email1) 
+{
+	invalidChars = " /:,;";
+	if (email1 == "")
+	{// cannot be empty
+		alert("Invalid E-mail ID.");
+		return false;	
+	}
+	for (i=0; i<invalidChars.length; i++) 
+	{	// does it contain any invalid characters?
+		badChar = invalidChars.charAt(i);
+		if (email1.indexOf(badChar,0) > -1) 
+		{
+			return false;
+		}
+	}
+	atPos = email1.indexOf("@",1)// there must be one "@" symbol
+	if (atPos == -1) 
+	{
+		alert("Invalid E-mail ID.");
+		return false;
+	}
+	if (email1.indexOf("@",atPos+1) != -1) 
+	{	// and only one "@" symbol
+		alert("Invalid E-mail ID.");
+		return false;
+	}
+	periodPos = email1.indexOf(".",atPos)
+	if (periodPos == -1) 
+	{// and at least one "." after the "@"
+		alert("Invalid E-mail ID.");
+		return false;
+	}
+	//alert(periodPos);
+	//alert(email.length);
+	if (periodPos+3 > email1.length)	
+	{		// must be at least 2 characters after the "."
+		alert("Invalid E-mail ID.");
+		return false;
+		
+	}
+	return true;
+}
+
+function validateMe0(formm)
+{  
+	if(formm.name0.value=="")
+	{
+			alert("please enter your Name!");
+			formm.name0.focus();
+				return false;
+	}
+	if(formm.email0.value=="")
+	{
+			alert("please enter your email id!");
+			formm.email0.focus();
+				return false;
+	}
+	if(form.email0.value!="")
+	{
+		if (!validmail1(form.email0.value))
+		{
+			//alert("Please enter your valid email address!");
+			form.email0.focus();
+			return false;
+		}
+
+	}
+	if(formm.comments0.value=="")
+	{
+			alert("please enter your comments!");
+			formm.comments0.focus();
+				return false;
+	}
+	if(formm.captcha0.value=="")
+	{
+			alert("please enter captcha!");
+			formm.captcha0.focus();
+				return false;
+	}	
+		
+}
+
+function validateMe(formm)
+{  
+	if(formm.name.value=="")
+	{
+			alert("please enter your Name!");
+			formm.name.focus();
+				return false;
+	}
+	if(formm.email.value=="")
+	{
+			alert("please enter your email id!");
+			formm.email.focus();
+				return false;
+	}
+	if(form.email.value!="")
+	{
+		if (!validmail(form.email.value))
+		{
+			//alert("Please enter your valid email address!");
+			form.email.focus();
+			return false;
+		}
+
+	}
+	if(formm.comments.value=="")
+	{
+			alert("please enter your comments!");
+			formm.comments.focus();
+				return false;
+	}
+	if(formm.captcha.value=="")
+	{
+			alert("please enter captcha!");
+			formm.captcha.focus();
+				return false;
+	}	
+		
+		
+	}
+
+function insRow(i)
+{
+	var ni = document.getElementById('myTable' + i);
+	ni.innerHTML='<div class="comment_form"><form id="form" name="form" method="post" action="com_submit.php"  onSubmit="return validateMe(this);"><input type="hidden" readonly name="uri" id="uri" value="/Contents_Calculators.php" ><input type="hidden" readonly name="current_id" id="current_id" value="'+ i +'" ><table ><tr><td valign="top" colspan="2" align="right"><a  onclick="deleteRow('+ i +')" style="cursor:pointer;"><img src="images/closelabel.png" border=0 ></a></td></tr><tr><td valign="top"><p class="comment_text_b">Name</p></td><td><input type="text" name="name" id="name" style="width:300px;" /></td></tr><tr><td valign="top"><p class="comment_text_b">Email</p></td><td><input type="text" name="email" id="email" style="width:300px;" /></td></tr><tr><td valign="top"><p class="comment_text_b">Comment</p></td><td><textarea name="comments" rows="5" style="width:500px;" ></textarea></td></tr><tr><td valign="middle"><p><span class="comment_text_b">Enter the code above</span></p></td><td align="left" ><table width="100%" border="0" cellspacing="0" cellpadding="0">  <tr>    <td width="23%" valign="bottom"><input type="text" name="captcha" id="captcha"></td><td width="77%" valign="bottom"><img src="captcha.php" alt=""></td>  </tr></table></td></tr><tr><td colspan="2" align="right"><button type="submit"><img src="images/add-comment.png" border=0 ></button><div class="spacer"></div></td></tr></table></form></div>';
+}
+function deleteRow(i)
+{
+ 	 var ni = document.getElementById('myTable' + i);
+	 ni.innerHTML='';
+}
+</script>
+<table border="0" style="width:650px;" ><tr><td valign="top" style="padding-top:15px; padding-bottom:5px;">
+<table style="width:100%; border-top:#333333 2px solid;"><tr><td>
+<strong style="font-size:16px;"> 60&nbsp;Comments, read them below or <a href="#putComment"  style="cursor:pointer;"><b><u>add one</u></b></a></strong>
+</td></tr>
+<!--<tr><td id="myTable0" ></td></tr> -->
+</table>
+<div id="getResult"></div>
+<div id="displayResult">
+<ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Lovely singh</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 29, 2013 9:43 am</span></td></tr><tr><td class="comment_text_a">i simply love it...</td></tr><tr><td class="reply_text" ><a onClick="insRow(1450);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1450" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>jitender</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 28, 2013 10:33 pm</span></td></tr><tr><td class="comment_text_a"> hi my age 51year i am govt. employ my salary is 27000pm, n how much amount i can get as home loan, n what r the condition for home loan,,,,plz ans me</td></tr><tr><td class="reply_text" ><a onClick="insRow(1449);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1449" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Geetika</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 29, 2013 11:47 am</span></td></tr><tr><td class="comment_text_a">Mr Jitender, according to your age you can get maximum loan upto 15 years because of your age. Your Eligibility goes upto approx rs.12 lacs for 15 years tenure period. better to add other family member as co-applicant. His/her income added a benefits to get higher loan amount for loan and Tenure will also increase.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1454);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1454" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>Md ali nawaz</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 27, 2013 1:35 pm</span></td></tr><tr><td class="comment_text_a">it is a very good calculation of your EMI loan details after </td></tr><tr><td class="reply_text" ><a onClick="insRow(1437);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1437" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>jagath</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 25, 2013 3:02 pm</span></td></tr><tr><td class="comment_text_a">I am self-employed professional.monthly income is 30000.i want 17lacs loan for the property of 20 lacs with 19years
+tenure. my age is 50.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1404);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1404" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Geetika</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 27, 2013 4:02 pm</span></td></tr><tr><td class="comment_text_a">Mr jagath, You can only get upto 75% to 80% of the property value on other side you are eligible for upto 16 lacs for 20 years loan period. </td></tr><tr><td class="reply_text" ><a onClick="insRow(1441);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1441" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>surya</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 24, 2013 10:54 pm</span></td></tr><tr><td class="comment_text_a">my salary is 25000pm, n how much amount i can get as home loan, n what r the condition for home loan,,,,plz ans me</td></tr><tr><td class="reply_text" ><a onClick="insRow(1383);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1383" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Geetika</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 27, 2013 4:04 pm</span></td></tr><tr><td class="comment_text_a">Mr Surya, On the Basis of 25k salary you can get maximum loan upto 13 lacs approx. For more info check this - http://www.deal4loans.com/Contents_Home_Loan_Faqs.php</td></tr><tr><td class="reply_text" ><a onClick="insRow(1442);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1442" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>Sudha</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 24, 2013 2:57 pm</span></td></tr><tr><td class="comment_text_a">Hi, 
+
+I am planning to take home loan my gross salary is 25000. What is the loan amount i am eligible for if i go with SBI</td></tr><tr><td class="reply_text" ><a onClick="insRow(1371);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1371" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>banke tiwari</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 27, 2013 4:06 pm</span></td></tr><tr><td class="comment_text_a">Ms Sudha, As per mentioned salary you can get maximum loan upto rs.13 lacs for 20 years period. Yes you can definitely go with SBI all the banks have different eligibility but difference is minimum</td></tr><tr><td class="reply_text" ><a onClick="insRow(1443);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1443" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>ramchandran</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 23, 2013 8:13 pm</span></td></tr><tr><td class="comment_text_a">My inhand salary is Rs.19800/ month. I want to take 10 lakhs Home loan. Can I get it? & pls tell me HDFC home loan intrest.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1357);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1357" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Kamal</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 27, 2013 4:08 pm</span></td></tr><tr><td class="comment_text_a">Mr Ramchandran, According to salary your eligibility goes upto to nearly 10 lacs for 20 years. Interest Rates of HDFC ltd Starts from 10.15% for 10-20 lac amount for 15 to 20 years time period.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1444);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1444" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>TINAMONI / BABLU / nalpur, howrah</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 23, 2013 9:57 am</span></td></tr><tr><td class="comment_text_a">very good calculator for loan</td></tr><tr><td class="reply_text" ><a onClick="insRow(1340);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1340" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>ABUL HASAN MULLICK</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 23, 2013 8:57 am</span></td></tr><tr><td class="comment_text_a">It is very nice calculating device for us .request its possible to download</td></tr><tr><td class="reply_text" ><a onClick="insRow(1338);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1338" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Naresh kadari</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 22, 2013 12:01 pm</span></td></tr><tr><td class="comment_text_a">I Need a home loan about 1800000. I would like to purchase a house. Its price is about 2100000. My salary is 4 lakhs per annum. Could you please suggest me how much iam eligible for?</td></tr><tr><td class="reply_text" ><a onClick="insRow(1332);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1332" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Deal4loans Team</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 22, 2013 5:51 pm</span></td></tr><tr><td class="comment_text_a">Mr.Naresh, As per mentioned Salary of 4 lac you can get maximum loan upto rs.17 lacs for 20 years.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1334);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1334" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>mahesh</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 19, 2013 2:20 pm</span></td></tr><tr><td class="comment_text_a"> its  very suitable  formula and  good  working as on pls  update ther print  option if  any get the  print  then it will suitable greate.
+
+Thanks  
+Mahesh </td></tr><tr><td class="reply_text" ><a onClick="insRow(1297);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1297" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Ahmed</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 17, 2013 7:01 pm</span></td></tr><tr><td class="comment_text_a">Very Very Informative device.  Thanks a Lot</td></tr><tr><td class="reply_text" ><a onClick="insRow(1284);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1284" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>bandhu prakash chaubey</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 17, 2013 3:53 pm</span></td></tr><tr><td class="comment_text_a">thanks for loan</td></tr><tr><td class="reply_text" ><a onClick="insRow(1281);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1281" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>appaji</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 17, 2013 3:01 pm</span></td></tr><tr><td class="comment_text_a"> this is very beautiful formula for calculating & understanding. even lower educated also understanding his loan v/s EMI calculating</td></tr><tr><td class="reply_text" ><a onClick="insRow(1279);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1279" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Gagan Dwivedi</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 16, 2013 10:39 pm</span></td></tr><tr><td class="comment_text_a">Very nice calculator.
+Sir my net sal. is 40,000 pm and i want 20 lac home loan for 10 y's.please advise.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1272);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1272" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Geetika</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 17, 2013 5:52 pm</span></td></tr><tr><td class="comment_text_a">Mr Gagan, You can easily get 20 lac loan amount for 20 years but if you are looking for 10 years tenure period then you only get upto 15 lac maximum</td></tr><tr><td class="reply_text" ><a onClick="insRow(1282);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1282" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>razoo</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 16, 2013 9:52 pm</span></td></tr><tr><td class="comment_text_a">great job </td></tr><tr><td class="reply_text" ><a onClick="insRow(1271);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1271" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Patel Suraj</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 13, 2013 9:21 am</span></td></tr><tr><td class="comment_text_a">My inhand salary is Rs.16697. I want to take 10 lakhs Home loan. Can I get it? For low interest ,which bank should I choose & home much time will taken for the same ?</td></tr><tr><td class="reply_text" ><a onClick="insRow(1197);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1197" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>jashan</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 16, 2013 3:30 pm</span></td></tr><tr><td class="comment_text_a">Mr patel on the basis of your salary you can get maximum loan upto 8.5 lacs for 20 years tenure period. Interest rates depends on your tenure & loan amount. HDFC and SBI are good options.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1264);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1264" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>Roshan</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 12, 2013 10:55 pm</span></td></tr><tr><td class="comment_text_a">My take home salary is 70K PM. I'm 28 years old and I would like to know whether i'm eligible for a personal loan of 20 lacs. Any references/pointers would me much appreciated.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1196);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1196" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>banke tiwari</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 16, 2013 3:31 pm</span></td></tr><tr><td class="comment_text_a">You can get a maximum loan upto 14 or 15 lacs as per your salary better to take another loan like - Home Loan, Loan against property.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1265);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1265" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>Rohit Kumar</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 10, 2013 9:03 pm</span></td></tr><tr><td class="comment_text_a">Very nice Calculator.
+But I have a question.
+My inhand salary is 44500.
+I want to take 9.5 lakhs personal loan.
+Can I get it? For low interest ,which bank should I choose.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1154);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1154" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Deal4loans Team</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 11, 2013 12:20 pm</span></td></tr><tr><td class="comment_text_a">Thanks Mr. Rohit. According to your Inhand salary you can get maximum loan upto rs.9 lacs. For lowest interest rates you can apply with us.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1159);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1159" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>kale kamlakar c</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 8, 2013 10:03 pm</span></td></tr><tr><td class="comment_text_a">good calculation but its possible to download</td></tr><tr><td class="reply_text" ><a onClick="insRow(1111);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1111" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>yogeshwar aggarwal</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 4, 2013 7:04 pm</span></td></tr><tr><td class="comment_text_a">your emi calculater for poor man who are cheated by financier</td></tr><tr><td class="reply_text" ><a onClick="insRow(1047);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1047" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Rakesh Kumar</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 4, 2013 2:48 pm</span></td></tr><tr><td class="comment_text_a">I need 1000000 as loan with maximum of 10.5% interest and the loan period id 15 years. can anyone suggest me with the bank which is suitable for me.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1043);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1043" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Geetika</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 12, 2013 6:16 pm</span></td></tr><tr><td class="comment_text_a">As per your Requirement HDFC Bank and SBI bank is suitable to you</td></tr><tr><td class="reply_text" ><a onClick="insRow(1190);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1190" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>Rekha Sigh</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 4, 2013 2:46 pm</span></td></tr><tr><td class="comment_text_a">Your EMI Calculators is very good & Simple </td></tr><tr><td class="reply_text" ><a onClick="insRow(1042);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1042" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>vipin</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 4, 2013 2:27 pm</span></td></tr><tr><td class="comment_text_a">very help full for calculation,</td></tr><tr><td class="reply_text" ><a onClick="insRow(1041);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1041" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Narendra Singh Shekhawat</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 3, 2013 10:52 am</span></td></tr><tr><td class="comment_text_a">I think it's very useful device and so easy to use.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1015);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1015" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>KVR Kumar</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 29, 2013 4:16 pm</span></td></tr><tr><td class="comment_text_a">It's very helpful and good to see EMI's</td></tr><tr><td class="reply_text" ><a onClick="insRow(959);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable959" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Nitin Agrawal</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 27, 2013 7:24 pm</span></td></tr><tr><td class="comment_text_a">Very user friendly. And straight forward.</td></tr><tr><td class="reply_text" ><a onClick="insRow(922);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable922" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>ARVIND SINGH</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 23, 2013 6:05 pm</span></td></tr><tr><td class="comment_text_a">It is a very simple device to calculate very loan interest easily</td></tr><tr><td class="reply_text" ><a onClick="insRow(869);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable869" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>siva</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 23, 2013 4:17 pm</span></td></tr><tr><td class="comment_text_a">ultimate solution for financial and banking services.</td></tr><tr><td class="reply_text" ><a onClick="insRow(867);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable867" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>bijoy biswas</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 19, 2013 10:34 am</span></td></tr><tr><td class="comment_text_a">very usefull emi calculator for loan</td></tr><tr><td class="reply_text" ><a onClick="insRow(809);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable809" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Rahman</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 15, 2013 11:42 am</span></td></tr><tr><td class="comment_text_a">Very useful EMI calculator for loans</td></tr><tr><td class="reply_text" ><a onClick="insRow(760);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable760" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Rakesh Tembare</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 13, 2013 3:23 pm</span></td></tr><tr><td class="comment_text_a">Very good Calculater for Loan</td></tr><tr><td class="reply_text" ><a onClick="insRow(733);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable733" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Thiyagarajan</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 13, 2013 6:56 am</span></td></tr><tr><td class="comment_text_a">During the loan tenure, if i decide to pay the remaning principal amount, can i able to close my loan?
+Example if i take 20Lks for 10 years @10.5% per annum.
+after paying the corresponding EMI for 2 years, my balance amount on the 2nd year will be 17,47,859. by paying the same can i able to close my loan on 2nd year itself.. 
+serious query please looking for expert answer.</td></tr><tr><td class="reply_text" ><a onClick="insRow(729);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable729" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>vinay</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  April 16, 2013 1:43 pm</span></td></tr><tr><td class="comment_text_a">yes Mr. Thiyagrajan. You can do that but you have to check if your bank charges any penal amount for pre payment of the loan. Most of the nationalized banks is not asking for any prepayment charges these days. but better if you enquire for the same. Any way you can pay your balance amount after 2 yrs in both the cases.</td></tr><tr><td class="reply_text" ><a onClick="insRow(1250);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable1250" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Deal4loans Team</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 15, 2013 11:37 am</span></td></tr><tr><td class="comment_text_a">Dear Thiyagaranjan, 
+Yes by paying the 17,47,859 you can close the loan unless there are any prepayment clauses or charges in the loan amount.</td></tr><tr><td class="reply_text" ><a onClick="insRow(759);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable759" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>naresh chandra</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 10, 2013 10:26 am</span></td></tr><tr><td class="comment_text_a">Good and helpful calculator</td></tr><tr><td class="reply_text" ><a onClick="insRow(669);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable669" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Babul</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 7, 2013 5:03 am</span></td></tr><tr><td class="comment_text_a">I want a loan of 10000000 suggest me  a bank where they charge less interest....PLEASE</td></tr><tr><td class="reply_text" ><a onClick="insRow(633);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable633" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Geetika</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 7, 2013 5:38 pm</span></td></tr><tr><td class="comment_text_a">First Compare Documents, Interest Rates, processing fees & All hidden charges of all banks. For comparing apply with deal4loans.com. After comparing all choose the best</td></tr><tr><td class="reply_text" ><a onClick="insRow(640);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable640" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>Raghu</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 3, 2013 10:00 pm</span></td></tr><tr><td class="comment_text_a">can u please tell me the procedure, how can i get my personnal loan closed, i have taken it from citi bank</td></tr><tr><td class="reply_text" ><a onClick="insRow(541);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable541" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>gurwinder</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 4, 2013 10:38 am</span></td></tr><tr><td class="comment_text_a">Pay your all pending loan amount then your personal loan case will closed by bank.
+
+</td></tr><tr><td class="reply_text" ><a onClick="insRow(546);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable546" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>PANKAJ</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 1, 2013 3:21 pm</span></td></tr><tr><td class="comment_text_a">I NEED PERSONAL LOAN BUT I GOT SALARY BY CASH SO IS THERE ANY OPPORTUNITY TO MEET MY TARGET.</td></tr><tr><td class="reply_text" ><a onClick="insRow(513);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable513" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>monika</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 1, 2013 4:11 pm</span></td></tr><tr><td class="comment_text_a">In this regard you have to contact your bank in which you have any of your account. they can help you because no bank will approve loan on cash salary.</td></tr><tr><td class="reply_text" ><a onClick="insRow(514);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable514" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>Sukhveer</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 28, 2013 9:01 pm</span></td></tr><tr><td class="comment_text_a">Dear sir/madam, i have closed all my loan, but loans dues are shown in the CIBIL, due to this i cant availing loan, please help me</td></tr><tr><td class="reply_text" ><a onClick="insRow(506);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable506" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Geetika</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  March 1, 2013 4:14 pm</span></td></tr><tr><td class="comment_text_a">Hello, Sukhveer. In this regard you can contact the bank from which you had taken a loan. Because they forget to close your loan application. In this matter only the bank will help you.</td></tr><tr><td class="reply_text" ><a onClick="insRow(515);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable515" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>Saraswati</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 27, 2013 12:31 pm</span></td></tr><tr><td class="comment_text_a">what should be the minimum salary to get housing loan if you are an employee of pvt Co.</td></tr><tr><td class="reply_text" ><a onClick="insRow(494);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable494" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Gaurav Shukla</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 28, 2013 10:49 am</span></td></tr><tr><td class="comment_text_a">its depend on salary nd need, both percent rate are co-related to each of them</td></tr><tr><td class="reply_text" ><a onClick="insRow(500);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable500" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>gurwinder</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 27, 2013 12:33 pm</span></td></tr><tr><td class="comment_text_a">Minimum salary required for home loans is Rs.10000 per month</td></tr><tr><td class="reply_text" ><a onClick="insRow(495);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable495" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>adesh</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 25, 2013 10:54 pm</span></td></tr><tr><td class="comment_text_a">i want personal loan of 10 lakh.
+
+1. Can u guide me which one allows Partial Payment so that we can get out of debt early.
+
+2. does personal loan gets in the way of visa and immigration process(asking since cant get the answer)..
+</td></tr><tr><td class="reply_text" ><a onClick="insRow(485);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable485" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>kailash</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 26, 2013 1:58 pm</span></td></tr><tr><td class="comment_text_a">Axis Bank can give u the part payment facility without charges</td></tr><tr><td class="reply_text" ><a onClick="insRow(489);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable489" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>venkanna g</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 22, 2013 2:09 pm</span></td></tr><tr><td class="comment_text_a">Hi sir I want personal lone rs 1000000/- my salary rs23000/-  best. Banks. Details </td></tr><tr><td class="reply_text" ><a onClick="insRow(451);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable451" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>gurwinder</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 23, 2013 4:16 pm</span></td></tr><tr><td class="comment_text_a">Best banks for Personal loan are - HDFC, Kotak, ing vysya, fullerton and ICICI Bank</td></tr><tr><td class="reply_text" ><a onClick="insRow(463);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable463" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>Umesh</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 21, 2013 3:06 pm</span></td></tr><tr><td class="comment_text_a">Hi.I want personal loan of 2.5 Lakh. My salary is 2.2 Lakh/annum. Plz suggest me good bank.</td></tr><tr><td class="reply_text" ><a onClick="insRow(442);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable442" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>ujjwal</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 22, 2013 12:03 pm</span></td></tr><tr><td class="comment_text_a">Umesh as per your salary details. HDFC, ICICI & Kotak Mahindra Offers you lowest Interest rates & highest Eligible loan amount. </td></tr><tr><td class="reply_text" ><a onClick="insRow(446);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable446" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>arzan patel</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 20, 2013 9:13 pm</span></td></tr><tr><td class="comment_text_a">I want a loan for Rs.500000 with max rate of interest 15% per annumn for 5 years.</td></tr><tr><td class="reply_text" ><a onClick="insRow(437);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable437" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>gurwinder</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 22, 2013 12:08 pm</span></td></tr><tr><td class="comment_text_a">Mr.patel. For 15% interest rates you must be from a CAT A listed company of the particular bank. All the Banks have different listed company. As per your working & salary details banks sanctioned loan amount.</td></tr><tr><td class="reply_text" ><a onClick="insRow(447);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable447" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>k.sathyanarayanan</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 20, 2013 8:03 pm</span></td></tr><tr><td class="comment_text_a">good calculation format thank u very much.</td></tr><tr><td class="reply_text" ><a onClick="insRow(436);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable436" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Mahesh Thombare</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 20, 2013 1:56 pm</span></td></tr><tr><td class="comment_text_a">Really good working </td></tr><tr><td class="reply_text" ><a onClick="insRow(433);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable433" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Arun Kumar</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 19, 2013 6:22 pm</span></td></tr><tr><td class="comment_text_a">Which Bank gives lowest interest rate of personal loan for Government employe, What the interest rate of SBI for gov. employe......?     </td></tr><tr><td class="reply_text" ><a onClick="insRow(426);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable426" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Satyendra Garg</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 22, 2013 12:18 pm</span></td></tr><tr><td class="comment_text_a">SBI offers 18.20% Interest rates on personal loans. If you want lowest rates on Loans then HDFC Bank offers loan @ 14.50%</td></tr><tr><td class="reply_text" ><a onClick="insRow(449);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable449" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>MAHENDRA SINGH KOBRA</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 14, 2013 9:05 pm</span></td></tr><tr><td class="comment_text_a">I want to get a amount of ten lac, my monthly income is 30000, which bank can give me the said amount, </td></tr><tr><td class="reply_text" ><a onClick="insRow(372);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable372" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>hardeep</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 15, 2013 12:17 pm</span></td></tr><tr><td class="comment_text_a">Hi, Mahendra...First of All please mention which loan you want to take.
+
+In home loan your maximum eligibility is Rs.15 lakh for 20 years
+
+And In Personal Loan your maximum eligibility will be upto Rs.7 to 8 lakhs for 4 years</td></tr><tr><td class="reply_text" ><a onClick="insRow(378);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable378" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>imran pathan</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 13, 2013 9:48 pm</span></td></tr><tr><td class="comment_text_a">i want home loan plz anyone can prefer me the best bank but i want to take from govt bank</td></tr><tr><td class="reply_text" ><a onClick="insRow(365);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable365" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Ashima</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 15, 2013 12:19 pm</span></td></tr><tr><td class="comment_text_a">Dear Imran In Govt Bank only one name comes in mind - SBI (State Bank of India)
+Hassle free documentation, Lowest Interest Rates, No Hidden Charges.</td></tr><tr><td class="reply_text" ><a onClick="insRow(379);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable379" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>s.k.mittal</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 12, 2013 9:45 pm</span></td></tr><tr><td class="comment_text_a">looking for home loan 8000000 from hdfc or citi bank, which one is better as both are approaching for early sanction and citi bank is offering interest rate 10.25 against 10.40 of hdfc. will the other terms of citi bank are comparable with hdfc, pls.suggest</td></tr><tr><td class="reply_text" ><a onClick="insRow(359);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable359" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Yogesh</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 15, 2013 12:21 pm</span></td></tr><tr><td class="comment_text_a">Yogesh..
+
+As per industry Stats ...Peoples preferred HDFC Ltd over Citibank
+
+HDFC Ltd offers minimum interest rates on home loans are -10.10%.
+
+Documents Process, after sales service, emi payment all are easy & hassle free in HDFC.</td></tr><tr><td class="reply_text" ><a onClick="insRow(380);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable380" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>P.R  Das</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 11, 2013 9:59 am</span></td></tr><tr><td class="comment_text_a">I like this EMI calculator because its so simple to use this calculator . I love to use this.</td></tr><tr><td class="reply_text" ><a onClick="insRow(332);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable332" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Babu</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 8, 2013 11:56 am</span></td></tr><tr><td class="comment_text_a">Best EMI Calculator so far..</td></tr><tr><td class="reply_text" ><a onClick="insRow(310);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable310" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>deepak</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 3, 2013 4:24 pm</span></td></tr><tr><td class="comment_text_a">sir with calculator pls provide repayment schedule month wise</td></tr><tr><td class="reply_text" ><a onClick="insRow(268);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable268" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>Ashish Anga</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 2, 2013 11:47 am</span></td></tr><tr><td class="comment_text_a">I need a home loan Rs. 30 Lacs. How much would it take if property is finalised (Approx 40 lacs).</td></tr><tr><td class="reply_text" ><a onClick="insRow(264);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable264" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Dharmik</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  February 6, 2013 11:28 am</span></td></tr><tr><td class="comment_text_a">Home loan eligibility depends on Your salary, company, Age & Work experience.</td></tr><tr><td class="reply_text" ><a onClick="insRow(289);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable289" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>ravi</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  January 29, 2013 11:07 pm</span></td></tr><tr><td class="comment_text_a">I need personal loan above 800000and i need help for need minimum interest rate</td></tr><tr><td class="reply_text" ><a onClick="insRow(237);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable237" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>rajni</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  January 31, 2013 12:05 pm</span></td></tr><tr><td class="comment_text_a">Dear Ravi, For any Queries about Personal loan - Apply at deal4loans.com and get the best offers and minimum interest rates after comparing best banks</td></tr><tr><td class="reply_text" ><a onClick="insRow(250);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable250" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>pawan</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  January 29, 2013 8:07 pm</span></td></tr><tr><td class="comment_text_a">hi i got a personal loan from sbi credit card for Rs. 200000.00 at 10.55 interest rate for 36 months in reducing rate. its emi is for Rs. 7313.89 and service tax extra. but as per emi calculator emi should be 6505.21. please suggest</td></tr><tr><td class="reply_text" ><a onClick="insRow(236);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable236" ></td></tr></table><ul class="comment"><li><table><tr><td><span class="comment_text_c"><b>Tiwari Ji</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  January 31, 2013 12:08 pm</span></td></tr><tr><td class="comment_text_a">Hi Pawan, I think the You have to Apply for Personal loan and close the PL on card. because interest rates charged on credit card is much higher than on personal loan.</td></tr><tr><td class="reply_text" ><a onClick="insRow(251);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable251" ></td></tr></table><ul class="comment"></ul></li></ul></li><li><table><tr><td><span class="comment_text_c"><b>veer</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  January 25, 2013 12:14 pm</span></td></tr><tr><td class="comment_text_a">ultimate solution for financial and banking services..
+</td></tr><tr><td class="reply_text" ><a onClick="insRow(217);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable217" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>NAUSHAD SHAIKH ( TALEGAON ) </b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  January 22, 2013 9:58 pm</span></td></tr><tr><td class="comment_text_a">good calculation format this calculate .i like this formate</td></tr><tr><td class="reply_text" ><a onClick="insRow(202);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable202" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>mahesh poojary</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  January 6, 2013 2:14 pm</span></td></tr><tr><td class="comment_text_a">good calculation format thank u very much. one request its possible to download ? </td></tr><tr><td class="reply_text" ><a onClick="insRow(101);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable101" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>neha singh</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  January 5, 2013 5:45 pm</span></td></tr><tr><td class="comment_text_a">very nice....</td></tr><tr><td class="reply_text" ><a onClick="insRow(97);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable97" ></td></tr></table><ul class="comment"></ul></li><li><table><tr><td><span class="comment_text_c"><b>SID</b></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment_text_d">  January 4, 2013 5:36 pm</span></td></tr><tr><td class="comment_text_a">ITS A VRY NCE CALCULATING DEVICE. I LIKE IT.</td></tr><tr><td class="reply_text" ><a onClick="insRow(90);" style="cursor:pointer;">Post Reply</a></td></tr><tr><td id="myTable90" ></td></tr></table><ul class="comment"></ul></li></ul></div>
+</td></tr>
+<tr><td id="putComment"><div class="comment_form"><form id="form0" name="form0" method="post" action="com_submit0.php"  onSubmit="return validateMe0(this);"><input type="hidden" readonly name="uri0" id="uri0" value="/Contents_Calculators.php" ><input type="hidden" readonly name="current_id0" id="current_id0" value="0" ><table ><tr><td valign="top" colspan="2"><p class="comment_text_c" style="font-size:17px;">Add Comment</p></td></tr><tr><td valign="top"><p class="comment_text_b">Name</p></td><td><input type="text" name="name0" id="name0" style="width:300px;" /></td></tr><tr><td valign="top"><p class="comment_text_b">Email</p></td><td><input type="text" name="email0" id="email0" style="width:300px;" /></td></tr><tr><td valign="top"><p class="comment_text_b">Comment</p></td><td><textarea name="comments0" rows="5" style="width:500px;" ></textarea></td></tr><tr><td valign="middle"><p><span class="comment_text_b">Enter the code above</span></p></td><td align="left" ><table width="100%" border="0" cellspacing="0" cellpadding="0">  <tr>    <td width="23%" valign="bottom"><input type="text" name="captcha0" id="captcha0"></td><td width="77%" valign="bottom"><img src="/captcha.php" alt=""></td>  </tr></table></td></tr><tr><td colspan="2" align="right"><button type="submit"><img src="http://www.bimadeals.com/images/add-comment.png" border=0 ></button><div class="spacer"></div></td></tr></table></form></div></td></tr>
+</table></div></td></tr>
+</table>
+</div>
+<div style="margin:auto; width:100%; height:380px; background-color:#203f5f; ">
+
+<!--Personal loan-->
+<div style="margin:auto; width:972px; height:234px; padding-top:30px;">
+
+<div style="width:172px; height:230px; float:left; clear:right;">
+<div class="text2" style="width:172px; height:auto; float:left;"><a href="/personal-loans.php"  title="Persoanl Loan" class="text2">Personal Loan</a></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:15px;"><a href="/personal-loan-banks.php" class="text12">Personal Loan Banks</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/personal-loan-interest-rate.php" class="text12">Personal Loan Interest Rate</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/Contents_Personal_Loan_Mustread.php" class="text12">Personal Loan Mustread</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/Contents_Personal_Loan_Faqs.php" class="text12">Personal Loan FAQs</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/loans/category/personal-loan/" class="text12">Personal Loan Articles</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="http://www.deal4loans.com/answers/personal-loan" class="text12">Queries on Personal Loan</a></div>
+</div>
+<div style="width:172px; height:230px; float:left; clear:right; margin-left:20px;">
+<div class="text2" style="width:172px; height:auto; float:left;"><a href="/home-loans.php" title="Home Loan" class="text2">Home Loan</a></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:15px;"><a href="home-loan-banks.php" class="text12">Home Loan Banks</a></div>
+<div style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/home-loans-interest-rates.php" class="text12">Home Loan Interest Rate</a></div>
+<div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/balance-transfer-home-loans.php" class="text12">Home Loan Bal Transfer</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/Contents_Home_Loan_Mustread.php" class="text12">Home Loan Mustread </a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/loans/category/home-loan/index.php" class="text12">Home Loan Articles</a></div>
+ <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/home-loan-calculator.php" class="text12">Home Loan Eligibility</a></div>
+ <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="http://www.deal4loans.com/answers/home-loan" class="text12">Queries on Home Loan</a></div>
+
+</div>
+
+<div style="width:172px; height:230px; float:left; clear:right; margin-left:20px;">
+<div class="text2" style="width:172px; height:auto; float:left;"><a href="/car-loans.php" title="Car Loan" class="text2">Car Loan</a></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:15px;"><a href="/car-loan-interest-rate.php" class="text12">Car Loan Interest Rate</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/Contents_Car_Loan_Eligibility.php" class="text12">Car Loan Eligibility</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/Contents_Car_Loan_Mustread.php" class="text12">Car Loan Must Read</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/loans/category/car-loan/" class="text12">Car Loan Articles</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="http://www.deal4loans.com/answers/car-loan" class="text12">Queries on Car Loan</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="http://www.deal4loans.com/answers/" class="text12">Ask Your Question</a></div>
+
+
+</div>
+
+
+<div style="width:172px; height:230px; float:left; clear:right; margin-left:20px;">
+<div class="text2" style="width:172px; height:auto; float:left;"><a href="/credit-cards.php" title="Credit Card" class="text2">Credit Card</a> </div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:15px;"><a href="/credit-card-n-debit-card-offers.php" class="text12">Credit Card Offers</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/Contents_Credit_Card_Mustread.php" class="text12">Credit Cards Must Read</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/Contents_Credit_Card_Faqs.php" class="text12">Credit Cards FAQs</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/loans/category/credit-card/" class="text12">Credit Cards Articles </a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:177px; height:auto; float:left; margin-top:8px;"><a href="/answers/credit-card" class="text12">Queries on Credit Card</a></div>
+ </div>
+
+
+<div style="width:172px; height:230px; float:left; clear:right; margin-left:20px;">
+<div class="text2" style="width:172px; height:auto; float:left;"><a href="/calculators-index.php" title="Loan Calculator" class="text2">Loan Calculator</a></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:15px;"><a href="http://www.deal4loans.com/Contents_Calculators.php" title="EMI Calculator" class="text12">EMI Calculator</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="http://www.deal4loans.com/car-loan-emi-calculator.php" title="Car Loan EMI Calculator" class="text12">Car Loan EMI Calculator</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="http://www.deal4loans.com/personal-loan-emi-calculator.php" title="Personal Loan EMI Calculator" class="text12">Personal Loan EMI Calculator</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="http://www.deal4loans.com/home-loan-balance-transfer-calculator.php" title="Home Loan Balance Transfer Calculator" class="text12">Balance Transfer Calculator</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:185px; height:auto; float:left; margin-top:8px;"><a href="http://www.deal4loans.com/home-loan-calculator.php" title="Home Loan Eligibility Calculator" class="text12">Home Loan Eligibility Calculator</a></div>
+  <div  style="width:172px; height:1px; float:left;  margin-top:9px;"><img src="/images/point2.gif" width="172" height="1" /></div>
+<div class="text12" style="width:172px; height:auto; float:left; margin-top:8px;"><a href="/loan-amortization-calculator.php" title="Loan Amortization Calculator" class="text12">Loan Amortization Calculator</a></div>
+</div>
+
+</div>
+<!--Personal loan-->
+<div style="margin:auto; width:942px; height:1px; margin-top:20px; "><img src="/images/point2.gif" width="942" height="1" /></div>
+
+<div class="text3" style="margin:auto; width:930px; height:auto; margin-top:15px; ">&nbsp;&nbsp;&nbsp;<a href="/index.php" class="text3">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/Contents_Articles.php" class="text3">Product Articles</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <a href="/loans/" class="text3">Help Articles</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="/Advertise_With_Us.php" rel="nofollow" class="text3">Advertise With Us</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/affiliate.php" rel="nofollow" class="text3">Be an Affiliate</a>&nbsp;&nbsp;&nbsp;&nbsp; <a href="/SiteMap.php" class="text3">Site Map</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="/Contents_Blogs.php" class="text3">Blogs</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/Contents_Feedback.php" class="text3">Testimonials</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/viewnewsletter/newsletter/29" rel="nofollow" class="text3">Newsletter</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/Privacy.php" rel="nofollow" class="text3">Privacy Policy</a></div>
+<div class="text9" style="margin:auto; width:942px; height:auto; margin-top:15px; ">
+<div style="width:670px; height:auto; float:left; clear:right; font-size:10px;">
+Disclaimer: Information is sourced from respective Banks websites. Deal4loans.com doesn't provide Loans on its own but ensures your information is sent to bank/agent which you have opted for. 
+Deal4loans has no sales team on its own and we just help you to compare loans .All loans are on discretion of the associated Banks/Agents. <a href="http://www.deal4loans.com/Contents_Disclaimer.php" class="text9" style=" color:#88a943;" >Read More</a>
+ </div>
+ <div style="width:206px; height:auto; float:right; clear:right; font-size:10px;">
+  <a href="http://www.dmca.com/Protection/Status.aspx?ID=7f890525-ed98-484c-9e2b-06dfc4d71d22" title="DMCA" target="_blank"> <img src ="http://images.dmca.com/Badges/dmca_protected_sml_120m.png?ID=7f890525-ed98-484c-9e2b-06dfc4d71d22"  alt="DMCA.com" /></a><br />
+  &copy; Copyright 2013, Deal4loans, India
+ </div>
+</div><br />
+<br />
+</div> 
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1312775-1");
+pageTracker._trackPageview();
+} catch(err) {}</script></div>
+</body>
+</html>
